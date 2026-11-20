@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Package, TrendingUp, ShieldAlert, UploadCloud, Trash2, AlertOctagon, RefreshCw, Search } from 'lucide-react'
+import logo from './assets/logo.png' // Import your logo
 
 export default function Admin() {
   const [session, setSession] = useState(null)
@@ -146,7 +147,6 @@ export default function Admin() {
     fetchOrders() 
   }
 
-  // SOFT DELETE: Hides order from view but keeps it in DB for Profit calculations
   const handleDeleteOrder = async (orderId) => {
     const confirmDelete = window.confirm(`Remove Order #${orderId} from the Manage Orders list? (It will still count towards your Total Sales and Profit).`)
     if (!confirmDelete) return
@@ -190,7 +190,9 @@ export default function Admin() {
     return (
       <div className="app-container center-content">
         <div className="auth-card" style={{ borderTop: '5px solid #d97706' }}>
-          <ShieldAlert size={40} color="#d97706" style={{ margin: '0 auto 10px' }} />
+          {/* LOGO ADDED HERE */}
+          <img src={logo} alt="Infinite Logo" style={{ height: '60px', objectFit: 'contain', marginBottom: '15px' }} />
+          
           <h2 style={{ color: '#d97706' }}>Organizer Login</h2>
           <form onSubmit={handleLogin}>
             <input type="email" placeholder="admin@infinite.com" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -330,7 +332,6 @@ export default function Admin() {
 
       {activeTab === 'orders' && (
         <div>
-          {/* RENEW / CLEAR VIEW BUTTON */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>View and verify incoming orders.</p>
             <button 
@@ -348,7 +349,7 @@ export default function Admin() {
           </div>
           
           {orders
-            .filter(o => !o.is_deleted) // Hide soft-deleted
+            .filter(o => !o.is_deleted)
             .filter(o => {
               if (ordersResetDate && new Date(o.created_at) < new Date(ordersResetDate)) return false;
               return true;
@@ -363,7 +364,6 @@ export default function Admin() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                   <span className={`status-badge ${order.status.toLowerCase()}`}>{order.status}</span>
-                  {/* DELETE BUTTON FOR SPECIFIC ORDER */}
                   <button onClick={() => handleDeleteOrder(order.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '3px', padding: 0 }}>
                     <Trash2 size={12} /> Delete
                   </button>

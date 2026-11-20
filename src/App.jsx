@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Search, LogOut, ShieldAlert } from 'lucide-react'
+import logo from './assets/logo.png' // Import your logo
 
 export default function App() {
   const [products, setProducts] = useState([])
@@ -33,7 +34,14 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="top-bar">
-        <h3 style={{ margin: 0, color: 'var(--primary)' }}>Infinite</h3>
+        {/* Logo Instead of Text */}
+        <img 
+          src={logo} 
+          alt="Infinite Logo" 
+          style={{ height: '35px', width: 'auto', objectFit: 'contain', cursor: 'pointer' }} 
+          onClick={() => navigate('/')}
+        />
+        
         <Link to="/cart" className="icon-btn"><ShoppingCart size={20} /></Link>
         <div className="search-bar">
           <Search size={18} />
