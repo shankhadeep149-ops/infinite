@@ -14,15 +14,17 @@ export default function Admin() {
   const [orders, setOrders] = useState([])
   
   // Form State
-  const [addType, setAddType] = useState('single') // 'single' or 'kit'
+  const [addType, setAddType] = useState('single') 
   const [newProduct, setNewProduct] = useState({ name: '', desc: '', sellPrice: '', buyPrice: '', stock: '' })
   const [productImage, setProductImage] = useState(null)
   const [selectedKitItems, setSelectedKitItems] = useState([]) 
-  const [kitSearch, setKitSearch] = useState('') // NEW: Search state for kit items
+  const [kitSearch, setKitSearch] = useState('') 
   const [isPublishing, setIsPublishing] = useState(false)
 
+  // Reset States
   const [profitResetDate, setProfitResetDate] = useState(localStorage.getItem('profitResetDate') || null)
   const [dashboardResetDate, setDashboardResetDate] = useState(localStorage.getItem('dashboardResetDate') || null)
+  const [ordersResetDate, setOrdersResetDate] = useState(localStorage.getItem('ordersResetDate') || null)
   
   const navigate = useNavigate()
 
@@ -133,23 +135,42 @@ export default function Admin() {
     setNewProduct({ name: '', desc: '', sellPrice: '', buyPrice: '', stock: '' })
     setProductImage(null)
     setSelectedKitItems([])
-    setKitSearch('') // Clear search after publish
+    setKitSearch('') 
     setActiveTab('home')
     fetchProducts()
     setIsPublishing(false)
   }
 
-  const markDelivered = async (orderId) => { await supabase.from('orders').update({ status: 'Delivered' }).eq('id', orderId); fetchOrders() }
+  const markDelivered = async (orderId) => { 
+    await supabase.from('orders').update({ status: 'Delivered' }).eq('id', orderId); 
+    fetchOrders() 
+  }
+
+  // SOFT DELETE: Hides order from view but keeps it in DB for Profit calculations
+  const handleDeleteOrder = async (orderId) => {
+    const confirmDelete = window.confirm(`Remove Order #${orderId} from the Manage Orders list? (It will still count towards your Total Sales and Profit).`)
+    if (!confirmDelete) return
+
+    const { error } = await supabase.from('orders').update({ is_deleted: true }).eq('id', orderId)
+    if (error) {
+      alert("Error removing order from view: " + error.message)
+    } else {
+      fetchOrders()
+    }
+  }
+
   const handleDeleteProduct = async (productId, productName) => {
     if (!window.confirm(`Discard "${productName}"?`)) return
     await supabase.from('products').delete().eq('id', productId)
     fetchProducts()
   }
+
   const handleOutOfStock = async (productId) => {
     if (!window.confirm(`Mark as Out of Stock?`)) return
     await supabase.from('products').update({ stock: 0 }).eq('id', productId)
     fetchProducts()
   }
+
   const handleRestock = async (productId, currentName) => {
     const newStockStr = window.prompt(`Enter new stock for "${currentName}":`, "10")
     if (!newStockStr) return
@@ -163,7 +184,6 @@ export default function Admin() {
     return sum + o.order_items.reduce((iSum, item) => iSum + ((item.price_at_time - (item.products?.wholesale_price || 0)) * item.quantity), 0)
   }, 0)
 
-  // Filter products for the Kit builder based on search
   const filteredKitProducts = products.filter(p => p.name.toLowerCase().includes(kitSearch.toLowerCase()))
 
   if (!session || !isAdmin) {
@@ -241,12 +261,10 @@ export default function Admin() {
           
           <input type="number" placeholder={`Stock Qty (How many ${addType === 'kit' ? 'kits' : 'items'} available?)`} value={newProduct.stock} onChange={e => setNewProduct({...newProduct, stock: e.target.value})} required />
 
-          {/* KIT ITEM SELECTOR WITH SEARCH */}
           {addType === 'kit' && (
             <div style={{ marginTop: '15px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', textAlign: 'left' }}>
               <label style={{ fontSize: '0.9rem', fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Select Items for this Kit:</label>
               
-              {/* SEARCH BAR */}
               <div style={{ display: 'flex', alignItems: 'center', background: 'white', border: '1px solid #ccc', borderRadius: '6px', padding: '5px 10px', marginBottom: '10px' }}>
                 <Search size={16} color="#666" />
                 <input 
@@ -312,15 +330,46 @@ export default function Admin() {
 
       {activeTab === 'orders' && (
         <div>
-          {orders.filter(o => !o.is_deleted).map(order => (
+          {/* RENEW / CLEAR VIEW BUTTON */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <p style={{ margin: 0, color: '#666', fontSize: '0.9rem' }}>View and verify incoming orders.</p>
+            <button 
+              onClick={() => {
+                if(window.confirm("Clear the order list view? Past orders are still saved in the database for profit calculation.")) {
+                  const now = new Date().toISOString();
+                  localStorage.setItem('ordersResetDate', now);
+                  setOrdersResetDate(now);
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#fee2e2', color: '#b91c1c', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              <RefreshCw size={14} /> Clear View
+            </button>
+          </div>
+          
+          {orders
+            .filter(o => !o.is_deleted) // Hide soft-deleted
+            .filter(o => {
+              if (ordersResetDate && new Date(o.created_at) < new Date(ordersResetDate)) return false;
+              return true;
+            })
+            .map(order => (
             <div key={order.id} className="order-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '10px' }}>
                 <div>
                   <h4 style={{ margin: 0 }}>Order #{order.id}</h4>
                   <p style={{ margin: '2px 0', fontSize: '0.9rem', color: '#1e3a8a', fontWeight: 'bold' }}>📞 {order.contact_no || 'No contact'}</p>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#666' }}>Pay: {order.payment_method}</p>
                 </div>
-                <span className={`status-badge ${order.status.toLowerCase()}`}>{order.status}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                  <span className={`status-badge ${order.status.toLowerCase()}`}>{order.status}</span>
+                  {/* DELETE BUTTON FOR SPECIFIC ORDER */}
+                  <button onClick={() => handleDeleteOrder(order.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '3px', padding: 0 }}>
+                    <Trash2 size={12} /> Delete
+                  </button>
+                </div>
               </div>
+              
               <div style={{ marginBottom: '10px' }}>
                 {order.order_items?.map((item, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '5px' }}>
@@ -329,21 +378,38 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '15px' }}><span>Total</span><span>₹{order.total_amount}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', marginBottom: '15px' }}>
+                <span>Total</span><span>₹{order.total_amount}</span>
+              </div>
+
               {order.status === 'Pending' ? (
                 <div>
                   {order.payment_method === 'UPI' && (
                     <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', padding: '12px', borderRadius: '8px', marginBottom: '15px' }}>
-                      <h4 style={{ margin: '0 0 5px 0', color: '#1e3a8a' }}>{order.upi_name || 'Not provided'}</h4>
-                      <h3 style={{ margin: 0, letterSpacing: '2px', color: '#1e3a8a', marginBottom: '10px' }}>{order.utr || 'No UTR'}</h3>
-                      {order.screenshot_url && <a href={order.screenshot_url} target="_blank"><img src={order.screenshot_url} style={{ width: '100%', maxHeight: '100px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #bfdbfe' }} /></a>}
+                      <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: '#1e3a8a', fontWeight: 'bold' }}>UPI Name:</p>
+                      <h4 style={{ margin: '0 0 10px 0', color: '#1e3a8a' }}>{order.upi_name || 'Not provided'}</h4>
+                      <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: '#1e3a8a', fontWeight: 'bold' }}>UTR:</p>
+                      <h3 style={{ margin: 0, letterSpacing: '2px', color: '#1e3a8a', marginBottom: '10px' }}>{order.utr || 'Not provided'}</h3>
+                      {order.screenshot_url ? (
+                        <div>
+                          <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', color: '#1e3a8a', fontWeight: 'bold' }}>Screenshot:</p>
+                          <a href={order.screenshot_url} target="_blank" rel="noopener noreferrer">
+                            <img src={order.screenshot_url} alt="Payment Proof" style={{ width: '100%', maxHeight: '160px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #bfdbfe', cursor: 'pointer' }} />
+                          </a>
+                        </div>
+                      ) : <p style={{ fontSize: '0.8rem', color: '#ef4444', fontStyle: 'italic' }}>No screenshot.</p>}
                     </div>
                   )}
-                  <button className="btn-primary" style={{ padding: '10px' }} onClick={() => markDelivered(order.id)}>Verify & Dispatch</button>
+                  <button className="btn-primary" style={{ padding: '10px', background: order.payment_method === 'UPI' ? 'var(--accent)' : '#1e3a8a' }} onClick={() => markDelivered(order.id)}>
+                    {order.payment_method === 'UPI' ? '✓ Verify Payment & Dispatch' : 'Mark as Delivered'}
+                  </button>
                 </div>
-              ) : <p style={{ color: 'var(--accent)', fontWeight: 'bold', textAlign: 'center' }}>Order Completed ✓</p>}
+              ) : (
+                <p style={{ color: 'var(--accent)', fontWeight: 'bold', textAlign: 'center' }}>Order Completed ✓</p>
+              )}
             </div>
           ))}
+          {orders.filter(o => !o.is_deleted).length === 0 && <p style={{ textAlign: 'center', color: '#666' }}>No orders to show.</p>}
         </div>
       )}
 
