@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Search, LogOut, ShieldAlert } from 'lucide-react'
-import logo from './assets/logo.png' // Import your logo
+import { ShoppingCart, Search, LogOut, ShieldAlert, Package } from 'lucide-react'
+import logo from './assets/logo.png' 
 
 export default function App() {
   const [products, setProducts] = useState([])
@@ -34,7 +34,6 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="top-bar">
-        {/* Logo Instead of Text */}
         <img 
           src={logo} 
           alt="Infinite Logo" 
@@ -68,7 +67,6 @@ export default function App() {
         {filteredProducts.map(p => (
           <div key={p.id} className="product-card" onClick={() => navigate('/product/' + p.id)}>
             
-            {/* Product Image */}
             <div className="product-img-placeholder" style={{ overflow: 'hidden', position: 'relative' }}>
               {p.image_url ? (
                 <img 
@@ -84,7 +82,6 @@ export default function App() {
             <div className="product-info">
               <h4>{p.name}</h4>
               <p>₹{p.price}</p>
-              {/* OUT OF STOCK TAG */}
               {p.stock === 0 && (
                 <span style={{ fontSize: '0.75rem', color: '#ef4444', fontWeight: 'bold' }}>OUT OF STOCK</span>
               )}
@@ -95,6 +92,31 @@ export default function App() {
           <p style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>No products found.</p>
         )}
       </div>
+
+      {/* MY ORDERS BUTTON */}
+      <div style={{ marginTop: '20px', paddingBottom: '20px' }}>
+        <Link 
+          to="/my-orders" 
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            gap: '8px',
+            width: '100%', 
+            padding: '15px', 
+            background: 'white', 
+            border: '2px solid #1e3a8a', 
+            borderRadius: '12px', 
+            color: '#1e3a8a', 
+            fontWeight: 'bold', 
+            textDecoration: 'none',
+            fontSize: '1rem'
+          }}
+        >
+          <Package size={18} /> MY ORDERS
+        </Link>
+      </div>
+
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Package, TrendingUp, ShieldAlert, UploadCloud, Trash2, AlertOctagon, RefreshCw, Search } from 'lucide-react'
-import logo from './assets/logo.png' // Import your logo
+import logo from './assets/logo.png' 
 
 export default function Admin() {
   const [session, setSession] = useState(null)
@@ -142,9 +142,21 @@ export default function Admin() {
     setIsPublishing(false)
   }
 
-  const markDelivered = async (orderId) => { 
-    await supabase.from('orders').update({ status: 'Delivered' }).eq('id', orderId); 
-    fetchOrders() 
+  // --- UPDATED: ASK FOR DELIVERY DAYS BEFORE DISPATCHING ---
+  const markDelivered = async (orderId) => {
+    const daysInput = window.prompt("Enter estimated delivery days (e.g., 3):", "3")
+    if (daysInput === null) return; // If admin clicks cancel, stop
+    
+    const days = Number(daysInput)
+    if (isNaN(days) || days <= 0) return alert("Please enter a valid number of days.")
+
+    const { error } = await supabase.from('orders').update({ 
+      status: 'Delivered', 
+      estimated_days: days 
+    }).eq('id', orderId)
+    
+    if (error) alert("Error updating order: " + error.message)
+    else fetchOrders()
   }
 
   const handleDeleteOrder = async (orderId) => {
@@ -190,9 +202,7 @@ export default function Admin() {
     return (
       <div className="app-container center-content">
         <div className="auth-card" style={{ borderTop: '5px solid #d97706' }}>
-          {/* LOGO ADDED HERE */}
           <img src={logo} alt="Infinite Logo" style={{ height: '60px', objectFit: 'contain', marginBottom: '15px' }} />
-          
           <h2 style={{ color: '#d97706' }}>Organizer Login</h2>
           <form onSubmit={handleLogin}>
             <input type="email" placeholder="admin@infinite.com" value={email} onChange={e => setEmail(e.target.value)} required />
