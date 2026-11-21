@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from './supabase'
-import { ChevronLeft, ShoppingCart, Star } from 'lucide-react'
+import { ChevronLeft, ShoppingCart, Star, Package } from 'lucide-react'
 
 export default function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   
-  // Product State
   const [product, setProduct] = useState(null)
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -19,28 +18,49 @@ export default function ProductDetail() {
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    // Fetch Product
-    supabase.from('products').select('*').eq('id', id).single().then(({ data }) => {
-      if (data) setProduct(data)
-      setLoading(false)
-    })
-    
-    // Fetch User
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
-    
-    // Fetch Reviews for this product
-    fetchReviews()
-  }, [id])
+  // Kit Contents State
+  const [kitItems, setKitItems] = useState([])
 
-  async function fetchReviews() {
-    const { data } = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('product_id', id)
-      .order('created_at', { ascending: false })
-    setReviews(data || [])
-  }
+  useEffect(() => {
+    async function loadData() {
+      // 1. Fetch Product
+      const { data: prodData } = await supabase.from('products').select('*').eq('id', id).single()
+      
+      if (prodData) {
+        setProduct(prodData)
+        
+        // 2. If it's a kit, fetch its contents
+        if (prodData.item_type === 'kit') {
+          const { data: kitData } = await supabase
+            .from('products')
+            .select('id, name, price, description, image_url, stock')
+            .eq('kit_id', id)
+          
+          setKitItems(kitData || [])
+
+          // 3. SMART STOCK CHECK: If any item inside the kit is out of stock, mark kit as out of stock
+          const isKitOutOfStock = kitData?.some(item => item.stock === 0)
+          if (isKitOutOfStock) {
+            setProduct(prev => ({ ...prev, stock: 0 }))
+          }
+        }
+      }
+      
+      // 4. Fetch User & Reviews
+      supabase.auth.getUser().then(({ data }) => setUser(data.user))
+      
+      const { data: reviewData } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', id)
+        .order('created_at', { ascending: false })
+      setReviews(reviewData || [])
+
+      setLoading(false)
+    }
+    
+    loadData()
+  }, [id])
 
   const addToCart = () => {
     const existingCart = JSON.parse(localStorage.getItem('cart')) || []
@@ -69,7 +89,7 @@ export default function ProductDetail() {
     
     setIsSubmitting(true)
     const { error } = await supabase.from('reviews').insert([{
-      product_id: id, // Link review to this specific product
+      product_id: id,
       user_id: user.id,
       user_email: user.email,
       rating: Number(rating),
@@ -79,14 +99,20 @@ export default function ProductDetail() {
     if (error) {
       alert(error.message)
     } else {
+      // Re-fetch reviews
+      const { data: reviewData } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('product_id', id)
+        .order('created_at', { ascending: false })
+      setReviews(reviewData || [])
+      
       setComment('')
       setRating(5)
-      fetchReviews()
     }
     setIsSubmitting(false)
   }
 
-  // Calculate average rating for this product
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : 0
@@ -123,6 +149,41 @@ export default function ProductDetail() {
           </span>
         </div>
 
+        {/* KIT CONTENTS DISPLAY */}
+        {product.item_type === 'kit' && kitItems.length > 0 && (
+          <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px' }}>
+            <h4 style={{ margin: '0 0 15px 0', display: 'flex', alignItems: 'center', gap: '6px', color: '#1e3a8a', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
+              <Package size={18} /> What's Included in this Kit?
+            </h4>
+            
+            {kitItems.map(item => (
+              <div key={item.id} style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'flex-start' }}>
+                <div style={{ width: '40px', height: '40px', background: '#eef2f6', borderRadius: '6px', overflow: 'hidden', flexShrink: 0 }}>
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: '#999' }}>Pic</div>
+                  )}
+                </div>
+                
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <strong style={{ fontSize: '0.9rem', color: '#333' }}>{item.name}</strong>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--primary)' }}>₹{item.price}</span>
+                  </div>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#666', lineHeight: '1.2' }}>{item.description}</p>
+                  {item.stock === 0 && <span style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 'bold' }}>OUT OF STOCK</span>}
+                </div>
+              </div>
+            ))}
+            
+            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px', marginTop: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#666' }}>
+              <span>Total Value of Items:</span>
+              <span style={{ textDecoration: 'line-through' }}>₹{kitItems.reduce((sum, item) => sum + item.price, 0)}</span>
+            </div>
+          </div>
+        )}
+
         {/* Quantity Selector */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <span style={{ fontWeight: '600' }}>Quantity:</span>
@@ -149,7 +210,6 @@ export default function ProductDetail() {
       <div style={{ marginTop: '30px' }}>
         <h3 style={{ marginBottom: '15px' }}>Ratings & Reviews</h3>
         
-        {/* Average Rating Box */}
         <div style={{ background: 'white', padding: '15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
           <div style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: '2.5rem', margin: 0, color: 'var(--primary)' }}>{averageRating}</h1>
@@ -165,7 +225,6 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Write a Review Form */}
         {user ? (
           <form onSubmit={handleSubmitReview} style={{ background: 'white', padding: '15px', borderRadius: '12px', marginBottom: '20px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
             <p style={{ margin: '0 0 10px 0', fontWeight: 'bold' }}>Write a Review</p>
@@ -198,7 +257,6 @@ export default function ProductDetail() {
           </div>
         )}
 
-        {/* Reviews List */}
         {reviews.map(review => (
           <div key={review.id} style={{ background: 'white', padding: '15px', borderRadius: '12px', marginBottom: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>

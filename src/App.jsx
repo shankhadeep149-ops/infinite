@@ -12,8 +12,32 @@ export default function App() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Fetch products
-    supabase.from('products').select('*').then(({ data }) => setProducts(data || []))
+    async function loadData() {
+      // 1. Fetch all products
+      const { data: allProducts } = await supabase.from('products').select('*')
+      
+      // 2. Check if any item inside a kit is out of stock
+      const processedProducts = await Promise.all((allProducts || []).map(async (p) => {
+        if (p.item_type === 'kit') {
+          // Fetch kit contents stock
+          const { data: kitItems } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('kit_id', p.id)
+          
+          // If any item has 0 stock, the kit is considered out of stock
+          const hasOutOfStockItem = kitItems?.some(item => item.stock === 0)
+          
+          if (hasOutOfStockItem) {
+            return { ...p, stock: 0 } // Override the kit's stock to 0
+          }
+        }
+        return p
+      }))
+      
+      setProducts(processedProducts)
+    }
+    loadData()
     
     // Check Auth & Admin Status
     supabase.auth.getUser().then(async ({ data }) => {
@@ -34,6 +58,7 @@ export default function App() {
   return (
     <div className="app-container">
       <header className="top-bar">
+        {/* Logo */}
         <img 
           src={logo} 
           alt="Infinite Logo" 

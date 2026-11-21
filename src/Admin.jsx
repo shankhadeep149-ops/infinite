@@ -52,7 +52,8 @@ export default function Admin() {
   }, [session, isAdmin])
 
   async function fetchProducts() {
-    const { data } = await supabase.from('products').select('*').eq('item_type', 'single').order('id', { ascending: false })
+    // Fetch ALL items (both single products and kits for inventory management)
+    const { data } = await supabase.from('products').select('*').order('id', { ascending: false })
     setProducts(data || [])
   }
 
@@ -142,10 +143,9 @@ export default function Admin() {
     setIsPublishing(false)
   }
 
-  // --- UPDATED: ASK FOR DELIVERY DAYS BEFORE DISPATCHING ---
   const markDelivered = async (orderId) => {
     const daysInput = window.prompt("Enter estimated delivery days (e.g., 3):", "3")
-    if (daysInput === null) return; // If admin clicks cancel, stop
+    if (daysInput === null) return;
     
     const days = Number(daysInput)
     if (isNaN(days) || days <= 0) return alert("Please enter a valid number of days.")
@@ -196,7 +196,7 @@ export default function Admin() {
     return sum + o.order_items.reduce((iSum, item) => iSum + ((item.price_at_time - (item.products?.wholesale_price || 0)) * item.quantity), 0)
   }, 0)
 
-  const filteredKitProducts = products.filter(p => p.name.toLowerCase().includes(kitSearch.toLowerCase()))
+  const filteredKitProducts = products.filter(p => p.item_type === 'single' && p.name.toLowerCase().includes(kitSearch.toLowerCase()))
 
   if (!session || !isAdmin) {
     return (
@@ -315,6 +315,7 @@ export default function Admin() {
 
       {activeTab === 'inventory' && (
         <div>
+          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>Manage your live products and kits below.</p>
           {products.map(p => (
             <div key={p.id} className="cart-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '15px' }}>
               <div style={{ display: 'flex', width: '100%', gap: '15px' }}>
@@ -322,7 +323,13 @@ export default function Admin() {
                   {p.image_url ? <img src={p.image_url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '0.6rem', color: '#999' }}>No Pic</div>}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 5px 0' }}>{p.name}</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                    <h4 style={{ margin: 0 }}>{p.name}</h4>
+                    {/* KIT LABEL */}
+                    {p.item_type === 'kit' && (
+                      <span style={{ background: '#d97706', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>KIT</span>
+                    )}
+                  </div>
                   <p style={{ margin: 0, color: 'var(--primary)', fontWeight: 'bold' }}>Sell: ₹{p.price}</p>
                   <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: p.stock === 0 ? '#ef4444' : '#666', fontWeight: p.stock === 0 ? 'bold' : 'normal' }}>{p.stock === 0 ? 'OUT OF STOCK' : `Stock: ${p.stock} units`}</p>
                 </div>
