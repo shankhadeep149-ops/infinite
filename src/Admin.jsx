@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Package, TrendingUp, ShieldAlert, UploadCloud, Trash2, AlertOctagon, RefreshCw, Search } from 'lucide-react'
+import { ArrowLeft, Plus, Package, TrendingUp, ShieldAlert, UploadCloud, Trash2, AlertOctagon, RefreshCw, Search, Edit } from 'lucide-react'
 import logo from './assets/logo.png' 
 
 export default function Admin() {
@@ -27,6 +27,10 @@ export default function Admin() {
   const [dashboardResetDate, setDashboardResetDate] = useState(localStorage.getItem('dashboardResetDate') || null)
   const [ordersResetDate, setOrdersResetDate] = useState(localStorage.getItem('ordersResetDate') || null)
   
+  // NEW: State for Editing Stock
+  const [editingStockId, setEditingStockId] = useState(null)
+  const [tempStockValue, setTempStockValue] = useState('')
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -52,7 +56,6 @@ export default function Admin() {
   }, [session, isAdmin])
 
   async function fetchProducts() {
-    // Fetch ALL items (both single products and kits for inventory management)
     const { data } = await supabase.from('products').select('*').order('id', { ascending: false })
     setProducts(data || [])
   }
@@ -190,6 +193,22 @@ export default function Admin() {
     fetchProducts()
   }
 
+  // --- NEW: Save Edited Stock ---
+  const saveEditedStock = async (productId) => {
+    const newStock = Number(tempStockValue)
+    if (isNaN(newStock) || newStock < 0) {
+      return alert("Please enter a valid stock number (0 or greater).")
+    }
+
+    const { error } = await supabase.from('products').update({ stock: newStock }).eq('id', productId)
+    if (error) {
+      alert("Error updating stock: " + error.message)
+    } else {
+      setEditingStockId(null) // Close edit mode
+      fetchProducts() // Refresh list
+    }
+  }
+
   const totalSales = orders.filter(o => !dashboardResetDate || new Date(o.created_at) >= new Date(dashboardResetDate)).reduce((sum, o) => sum + o.total_amount, 0)
   const activeOrders = orders.filter(o => o.status === 'Pending' && (!dashboardResetDate || new Date(o.created_at) >= new Date(dashboardResetDate))).length
   const totalProfit = orders.filter(o => o.status === 'Delivered' && (!profitResetDate || new Date(o.created_at) >= new Date(profitResetDate))).reduce((sum, o) => {
@@ -315,7 +334,7 @@ export default function Admin() {
 
       {activeTab === 'inventory' && (
         <div>
-          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>Manage your live products and kits below.</p>
+          <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '15px' }}>Manage your live products and kits below. Click the edit icon to manually change stock.</p>
           {products.map(p => (
             <div key={p.id} className="cart-item" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '15px' }}>
               <div style={{ display: 'flex', width: '100%', gap: '15px' }}>
@@ -325,13 +344,38 @@ export default function Admin() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
                     <h4 style={{ margin: 0 }}>{p.name}</h4>
-                    {/* KIT LABEL */}
-                    {p.item_type === 'kit' && (
-                      <span style={{ background: '#d97706', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>KIT</span>
-                    )}
+                    {p.item_type === 'kit' && <span style={{ background: '#d97706', color: 'white', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>KIT</span>}
                   </div>
                   <p style={{ margin: 0, color: 'var(--primary)', fontWeight: 'bold' }}>Sell: ₹{p.price}</p>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: p.stock === 0 ? '#ef4444' : '#666', fontWeight: p.stock === 0 ? 'bold' : 'normal' }}>{p.stock === 0 ? 'OUT OF STOCK' : `Stock: ${p.stock} units`}</p>
+                  
+                  {/* EDITABLE STOCK SECTION */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
+                    {editingStockId === p.id ? (
+                      <>
+                        <input 
+                          type="number" 
+                          value={tempStockValue} 
+                          onChange={e => setTempStockValue(e.target.value)}
+                          style={{ width: '60px', padding: '4px', fontSize: '0.9rem', border: '1px solid #1e3a8a', borderRadius: '4px' }}
+                          autoFocus
+                        />
+                        <button onClick={() => saveEditedStock(p.id)} style={{ background: '#10b981', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>Save</button>
+                        <button onClick={() => setEditingStockId(null)} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem', cursor: 'pointer' }}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: p.stock === 0 ? '#ef4444' : '#666', fontWeight: p.stock === 0 ? 'bold' : 'normal' }}>
+                          {p.stock === 0 ? 'OUT OF STOCK' : `Stock: ${p.stock} units`}
+                        </p>
+                        <button 
+                          onClick={() => { setEditingStockId(p.id); setTempStockValue(p.stock.toString()); }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                        >
+                          <Edit size={14} color="#1e3a8a" />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '10px', width: '100%', marginTop: '15px' }}>

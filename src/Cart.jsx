@@ -54,7 +54,7 @@ export default function Cart() {
     }
   }
 
-  // Finalize the order, upload proof, and deduct stock
+  // Finalize the order, upload proof
   const finalizeOrder = async () => {
     if (!contactNo || contactNo.length < 10) {
       return alert("Please enter a valid 10-digit contact number.")
@@ -112,35 +112,14 @@ export default function Cart() {
 
     const newOrderId = orderData[0].id
     
-    // 3. Save Order Items & Deduct Stock
-    const orderItems = []
-    
-    for (const item of cart) {
-      // Add to order_items array
-      orderItems.push({
-        order_id: newOrderId,
-        product_id: item.id,
-        quantity: item.quantity,
-        price_at_time: item.price
-      })
+    // 3. Save Order Items (No stock deduction here)
+    const orderItems = cart.map(item => ({
+      order_id: newOrderId,
+      product_id: item.id,
+      quantity: item.quantity,
+      price_at_time: item.price
+    }))
 
-      // Check if the purchased item is a Kit
-      const { data: kitContents } = await supabase
-        .from('products')
-        .select('*')
-        .eq('kit_id', item.id)
-
-      // If it is a Kit, deduct stock for all internal components
-      if (kitContents && kitContents.length > 0) {
-        for (const component of kitContents) {
-          await supabase.from('products')
-            .update({ stock: component.stock - item.quantity })
-            .eq('id', component.id)
-        }
-      }
-    }
-
-    // Insert all order items
     await supabase.from('order_items').insert(orderItems)
     
     // 4. Show Success Screen
