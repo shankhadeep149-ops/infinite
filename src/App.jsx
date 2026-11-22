@@ -10,18 +10,17 @@ export default function App() {
   const [user, setUser] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   
-  // NEW: State for Splash Screen
+  // State for Splash Screen
   const [showSplash, setShowSplash] = useState(true)
   
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Hide splash screen after 2.8 seconds (2s wait + 0.8s fade out)
+    // Hide splash screen after 3.3 seconds (2.5s wait + 0.8s fade out)
     const timer = setTimeout(() => {
       setShowSplash(false)
-    }, 2800)
+    }, 3300)
     
-    // Fetch data
     async function loadData() {
       const { data: allProducts } = await supabase.from('products').select('*')
       const processedProducts = await Promise.all((allProducts || []).map(async (p) => {
@@ -44,7 +43,6 @@ export default function App() {
       }
     })
 
-    // Cleanup timer
     return () => clearTimeout(timer)
   }, [])
 
@@ -56,7 +54,10 @@ export default function App() {
       {showSplash && (
         <div className="splash-screen">
           <img src={logo} alt="Infinite Logo" className="splash-logo" />
-          <div className="splash-text">INFINITE</div>
+          <div className="splash-tagline">
+            Build More.<br /><span>Wait Less.</span>
+          </div>
+          <div className="splash-underline"></div>
         </div>
       )}
 
