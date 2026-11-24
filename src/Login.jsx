@@ -28,90 +28,80 @@ export default function Login() {
   }
 
   return (
-    <div className="login-split">
+    <div className="login-unified-page">
       
-      {/* LEFT SIDE: ANIMATED TECH GRAPHIC */}
-      <div className="login-left">
-        <div className="tech-graphic-container">
-          
-          {/* Rotating Rings */}
-          <div className="tech-ring"></div>
-          <div className="tech-ring-2"></div>
-          
-          {/* Circuit Lines */}
-          <div className="circuit-line circuit-line-horizontal" style={{ top: '30%', left: '0%' }}></div>
-          <div className="circuit-line circuit-line-horizontal" style={{ bottom: '30%', right: '0%' }}></div>
-          <div className="circuit-line circuit-line-vertical" style={{ left: '30%', top: '0%' }}></div>
-          <div className="circuit-line circuit-line-vertical" style={{ right: '30%', bottom: '0%' }}></div>
+      {/* UNIQUE TECH ANIMATION (Hologram Chip) */}
+      <div className="hologram-container">
+        <div className="holo-ring holo-ring-1"></div>
+        <div className="holo-ring holo-ring-2"></div>
+        
+        <div className="circuit-line horizontal top"></div>
+        <div className="circuit-line horizontal bottom"></div>
+        <div className="circuit-line vertical left"></div>
+        <div className="circuit-line vertical right"></div>
 
-          {/* Floating Particles */}
-          <div className="particle" style={{ width: '6px', height: '6px', top: '80%', left: '20%', animation: 'float-up 3s infinite ease-in' }}></div>
-          <div className="particle" style={{ width: '4px', height: '4px', top: '70%', right: '20%', animation: 'float-up 4s infinite ease-in 1s' }}></div>
-          <div className="particle" style={{ width: '8px', height: '8px', top: '90%', left: '50%', animation: 'float-up 2.5s infinite ease-in 0.5s' }}></div>
+        <div className="data-particle" style={{ width: '6px', height: '6px', top: '80%', left: '20%' }}></div>
+        <div className="data-particle" style={{ width: '8px', height: '8px', top: '70%', right: '10%', animationDelay: '1s' }}></div>
+        <div className="data-particle" style={{ width: '4px', height: '4px', top: '90%', left: '60%', animationDelay: '2s' }}></div>
 
-          {/* Glowing Core (Chip) */}
-          <div className="tech-core">
-            <ShieldCheck size={30} color="#a3e635" />
-          </div>
-
-          {/* Text Overlay */}
-          <div style={{ position: 'absolute', bottom: '-40px', width: '100%', textAlign: 'center', zIndex: 20 }}>
-            <h2 style={{ margin: 0, color: 'white', letterSpacing: '4px', fontSize: '1.5rem', fontWeight: 'bold' }}>INFINITE</h2>
-            <p style={{ margin: '5px 0 0 0', color: '#a3e635', fontSize: '0.8rem', letterSpacing: '1px' }}>Build More. Wait Less.</p>
-          </div>
+        <div className="holo-chip">
+          <ShieldCheck size={35} color="#a3e635" />
         </div>
       </div>
 
-      {/* RIGHT SIDE: LOGIN FORM */}
-      <div className="login-right">
-        <div className="login-form-box">
-          <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-            <img src={logo} alt="Infinite Logo" style={{ height: '50px', marginBottom: '10px' }} />
-            <h2 style={{ margin: 0, color: '#1e3a8a', fontSize: '1.8rem' }}>{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
-            <p style={{ color: '#666', marginTop: '5px' }}>{isSignUp ? 'Join Infinite to get your project parts fast.' : 'Log in to access your student store.'}</p>
+      {/* FOREGROUND LOGIN CARD */}
+      <div className="glass-login-card">
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <img src={logo} alt="Infinite Logo" style={{ height: '50px', marginBottom: '15px', borderRadius: '8px' }} />
+          <h2>{isSignUp ? 'Create Account' : 'Welcome Back'}</h2>
+          <p className="subtitle">{isSignUp ? 'Join to get your parts fast.' : 'Log in to access your student store.'}</p>
+        </div>
+
+        <form onSubmit={handleAuth}>
+          <div className="glass-input-wrapper">
+            <Mail size={18} />
+            <input 
+              type="email" 
+              className="glass-input"
+              placeholder="student@college.edu" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              required 
+            />
+          </div>
+          
+          <div className="glass-input-wrapper">
+            <Lock size={18} />
+            <input 
+              type="password" 
+              className="glass-input"
+              placeholder="Password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              required 
+            />
           </div>
 
-          <form onSubmit={handleAuth}>
-            <div style={{ marginBottom: '15px', position: 'relative' }}>
-              <Mail size={18} color="#999" style={{ position: 'absolute', top: '14px', left: '12px' }} />
-              <input 
-                type="email" 
-                placeholder="student@college.edu" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                required 
-                style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '1rem', boxSizing: 'border-box' }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '20px', position: 'relative' }}>
-              <Lock size={18} color="#999" style={{ position: 'absolute', top: '14px', left: '12px' }} />
-              <input 
-                type="password" 
-                placeholder="Password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                required 
-                style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '1rem', boxSizing: 'border-box' }}
-              />
-            </div>
+          <button type="submit" className="glass-btn" disabled={loading}>
+            {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Log In')}
+            {!loading && <ArrowRight size={18} />}
+          </button>
+        </form>
 
-            <button type="submit" className="btn-primary" disabled={loading} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '14px', fontSize: '1rem', background: '#1e3a8a' }}>
-              {loading ? 'Processing...' : (isSignUp ? 'Sign Up' : 'Log In')}
-              {!loading && <ArrowRight size={18} />}
-            </button>
-          </form>
-
-          <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.9rem', color: '#666' }}>
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}
-            <span onClick={() => setIsSignUp(!isSignUp)} style={{ color: '#1e3a8a', fontWeight: 'bold', cursor: 'pointer', marginLeft: '5px' }}>
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+          <p style={{ fontSize: '0.9rem', color: '#93c5fd', margin: 0 }}>
+            {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+            <span 
+              onClick={() => setIsSignUp(!isSignUp)} 
+              style={{ color: '#a3e635', fontWeight: 'bold', cursor: 'pointer' }}
+            >
               {isSignUp ? 'Log In' : 'Sign Up'}
             </span>
           </p>
-          
-          <div style={{ textAlign: 'center', marginTop: '30px' }}>
-             <Link to="/" style={{ color: '#999', textDecoration: 'none', fontSize: '0.85rem' }}>← Back to Store</Link>
-          </div>
+        </div>
+        
+        <div style={{ textAlign: 'center', marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '15px' }}>
+           <Link to="/" className="glass-link">← Back to Store</Link>
         </div>
       </div>
 

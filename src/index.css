@@ -72,40 +72,51 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color
 .splash-tagline span { color: #a3e635; }
 .splash-underline { width: 80px; height: 4px; background-color: #a3e635; border-radius: 2px; margin-top: 15px; }
 
-/* --- Login Page Animation Styles --- */
-.login-split { display: flex; min-height: 100vh; background: #0a1128; overflow: hidden; }
-.login-left { flex: 1; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #1e3a8a 0%, #0a1128 100%); position: relative; overflow: hidden; }
-.login-right { flex: 1; display: flex; justify-content: center; align-items: center; background: white; padding: 40px; }
-.login-form-box { width: 100%; max-width: 400px; animation: slideIn 0.5s ease-out forwards; }
-@keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+/* =========================================
+   NEW: UNIQUE TECH LOGIN ANIMATION
+   ========================================= */
 
-/* NEW: TECH GRAPHIC ANIMATION */
-.tech-graphic-container {
-  position: relative;
-  width: 300px;
-  height: 300px;
+.login-unified-page {
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  background: radial-gradient(circle at center, #1e3a8a 0%, #0a1128 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+  box-sizing: border-box;
+  flex-direction: column;
 }
 
-/* Glowing Central Core */
-.tech-core {
+/* The Glowing Holographic Chip Animation */
+.hologram-container {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  perspective: 1000px;
+}
+
+.holo-chip {
   width: 80px;
   height: 80px;
-  background: #0a1128;
+  background: rgba(10, 17, 40, 0.8);
   border: 3px solid #a3e635;
-  border-radius: 12px;
-  box-shadow: 0 0 30px rgba(163, 230, 53, 0.6), inset 0 0 20px rgba(163, 230, 53, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 0 30px rgba(163, 230, 53, 0.8), inset 0 0 20px rgba(163, 230, 53, 0.5);
   position: relative;
   z-index: 10;
-  animation: pulse-core 3s infinite ease-in-out;
   display: flex;
   justify-content: center;
   align-items: center;
+  animation: float-chip 4s ease-in-out infinite;
 }
 
-.tech-core::before {
+.holo-chip::after {
   content: '';
   width: 40px;
   height: 40px;
@@ -114,81 +125,122 @@ body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color
   animation: spin 10s linear infinite;
 }
 
-/* Rotating Outer Rings */
-.tech-ring {
+.holo-ring {
   position: absolute;
-  border: 2px solid rgba(163, 230, 53, 0.2);
+  border: 2px solid rgba(163, 230, 53, 0.3);
   border-radius: 50%;
-  width: 200px;
-  height: 200px;
   animation: spin 15s linear infinite;
-  box-shadow: 0 0 15px rgba(163, 230, 53, 0.1);
 }
+.holo-ring-1 { width: 140px; height: 140px; }
+.holo-ring-2 { width: 180px; height: 180px; border: 2px dashed rgba(163, 230, 53, 0.2); animation: spin-reverse 20s linear infinite; }
 
-.tech-ring-2 {
-  width: 280px;
-  height: 280px;
-  border: 2px dashed rgba(163, 230, 53, 0.15);
-  animation: spin-reverse 20s linear infinite;
-}
-
-/* Circuit Lines */
+/* Animated Circuit Lines */
 .circuit-line {
   position: absolute;
-  background: rgba(163, 230, 53, 0.4);
+  background: #a3e635;
   box-shadow: 0 0 10px #a3e635;
+  border-radius: 4px;
 }
 
-.circuit-line-horizontal {
-  height: 2px;
-  width: 100px;
+.circuit-line.horizontal { height: 3px; width: 150px; }
+.circuit-line.vertical { width: 3px; height: 150px; }
+
+.circuit-line.horizontal.top { top: 10%; left: -20%; animation: pulse-line 2s infinite; }
+.circuit-line.horizontal.bottom { bottom: 10%; right: -20%; animation: pulse-line 2s infinite 0.5s; }
+.circuit-line.vertical.left { left: 10%; top: -20%; animation: pulse-line 2s infinite 1s; }
+.circuit-line.vertical.right { right: 10%; bottom: -20%; animation: pulse-line 2s infinite 1.5s; }
+
+@keyframes float-chip {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
 }
 
-.circuit-line-vertical {
-  width: 2px;
-  height: 100px;
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spin-reverse { 0% { transform: rotate(0deg); } 100% { transform: rotate(-360deg); } }
+@keyframes pulse-line { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; box-shadow: 0 0 20px #a3e635; } }
 
-/* Keyframe animations */
-@keyframes pulse-core {
-  0% { box-shadow: 0 0 30px rgba(163, 230, 53, 0.4), inset 0 0 20px rgba(163, 230, 53, 0.1); }
-  50% { box-shadow: 0 0 60px rgba(163, 230, 53, 0.8), inset 0 0 30px rgba(163, 230, 53, 0.4); }
-  100% { box-shadow: 0 0 30px rgba(163, 230, 53, 0.4), inset 0 0 20px rgba(163, 230, 53, 0.1); }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes spin-reverse {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(-360deg); }
-}
-
-/* Floating Particles */
-.particle {
+/* Floating Data Particles */
+.data-particle {
   position: absolute;
   background: #a3e635;
   border-radius: 50%;
   box-shadow: 0 0 10px #a3e635;
+  animation: particle-float 3s infinite ease-in;
 }
 
-@keyframes float-up {
-  0% { transform: translateY(0px); opacity: 1; }
-  100% { transform: translateY(-150px); opacity: 0; }
+@keyframes particle-float {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(30px, -100px) scale(0.5); opacity: 0; }
 }
 
-/* Mobile Responsive */
+/* The Glassmorphism Form Card (Now more visible) */
+.glass-login-card {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.glass-login-card h2 { color: white; margin: 0 0 5px 0; font-size: 1.8rem; text-align: center; }
+.glass-login-card p.subtitle { color: #93c5fd; margin: 0 0 30px 0; font-size: 0.9rem; text-align: center; }
+
+.glass-input-wrapper { position: relative; margin-bottom: 15px; }
+.glass-input-wrapper svg { position: absolute; top: 14px; left: 14px; color: #93c5fd; }
+.glass-input {
+  width: 100%;
+  padding: 14px 14px 14px 42px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: white;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: all 0.3s;
+}
+.glass-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+.glass-input:focus { outline: none; border-color: #a3e635; background: rgba(0, 0, 0, 0.5); box-shadow: 0 0 15px rgba(163, 230, 53, 0.3); }
+
+.glass-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(90deg, #1e3a8a, #152c6b);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+.glass-btn:hover { background: linear-gradient(90deg, #152c6b, #1e3a8a); transform: translateY(-2px); box-shadow: 0 5px 20px rgba(30, 58, 138, 0.6); }
+
+.glass-link { color: #93c5fd; text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+.glass-link:hover { color: white; }
+
 @media (max-width: 768px) {
-  .login-split { flex-direction: column; min-height: 100vh; }
-  .login-left { min-height: 250px; padding: 20px; }
-  .tech-graphic-container { width: 180px; height: 180px; }
-  .tech-core { width: 50px; height: 50px; }
-  .tech-ring { width: 120px; height: 120px; }
-  .tech-ring-2 { width: 180px; height: 180px; }
-  .circuit-line-horizontal { width: 60px; }
-  .circuit-line-vertical { height: 60px; }
-  .login-right { padding: 20px; align-items: flex-start; padding-top: 30px; }
-  .login-form-box { max-width: 100%; }
+  .glass-login-card { padding: 30px 20px; }
+  .hologram-container { width: 160px; height: 160px; margin-bottom: 20px; }
+  .holo-chip { width: 60px; height: 60px; }
+  .holo-ring-1 { width: 100px; height: 100px; }
+  .holo-ring-2 { width: 140px; height: 140px; }
+  .circuit-line.horizontal { width: 100px; }
+  .circuit-line.vertical { height: 100px; }
 }
