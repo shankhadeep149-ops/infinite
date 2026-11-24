@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabase'
 import { useNavigate, Link } from 'react-router-dom'
-import { Mail, Lock, ArrowRight } from 'lucide-react'
+import { Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react'
 import logo from './assets/logo.png'
 
 export default function Login() {
@@ -30,22 +30,35 @@ export default function Login() {
   return (
     <div className="login-split">
       
-      {/* LEFT SIDE: ANIMATED GRAPHIC */}
+      {/* LEFT SIDE: ANIMATED TECH GRAPHIC */}
       <div className="login-left">
-        <div className="animated-tech-graphic">
-          {/* Abstract Circuit Graphic */}
-          <div className="circuit-line" style={{ top: '20%', left: '10%', width: '80%', height: '4px' }}></div>
-          <div className="circuit-line" style={{ top: '50%', left: '0%', width: '100%', height: '4px', animationDelay: '0.5s' }}></div>
-          <div className="circuit-line" style={{ top: '80%', left: '20%', width: '60%', height: '4px', animationDelay: '1s' }}></div>
+        <div className="tech-graphic-container">
           
-          <div className="circuit-line" style={{ top: '20%', left: '20%', width: '4px', height: '60%' }}></div>
-          <div className="circuit-line" style={{ top: '10%', left: '70%', width: '4px', height: '80%', animationDelay: '0.3s' }}></div>
+          {/* Rotating Rings */}
+          <div className="tech-ring"></div>
+          <div className="tech-ring-2"></div>
           
-          {/* Central Glowing Chip */}
-          <div style={{ position: 'absolute', top: '40%', left: '40%', width: '50px', height: '50px', background: '#0a1128', border: '3px solid #a3e635', borderRadius: '10px', boxShadow: '0 0 20px #a3e635', zIndex: 2 }}></div>
-          
-          <h2 style={{ position: 'absolute', top: '60%', width: '100%', textAlign: 'center', color: 'white', fontWeight: 'bold', letterSpacing: '2px' }}>INFINITE</h2>
-          <p style={{ position: 'absolute', top: '68%', width: '100%', textAlign: 'center', color: '#a3e635', fontSize: '0.8rem' }}>Build More. Wait Less.</p>
+          {/* Circuit Lines */}
+          <div className="circuit-line circuit-line-horizontal" style={{ top: '30%', left: '0%' }}></div>
+          <div className="circuit-line circuit-line-horizontal" style={{ bottom: '30%', right: '0%' }}></div>
+          <div className="circuit-line circuit-line-vertical" style={{ left: '30%', top: '0%' }}></div>
+          <div className="circuit-line circuit-line-vertical" style={{ right: '30%', bottom: '0%' }}></div>
+
+          {/* Floating Particles */}
+          <div className="particle" style={{ width: '6px', height: '6px', top: '80%', left: '20%', animation: 'float-up 3s infinite ease-in' }}></div>
+          <div className="particle" style={{ width: '4px', height: '4px', top: '70%', right: '20%', animation: 'float-up 4s infinite ease-in 1s' }}></div>
+          <div className="particle" style={{ width: '8px', height: '8px', top: '90%', left: '50%', animation: 'float-up 2.5s infinite ease-in 0.5s' }}></div>
+
+          {/* Glowing Core (Chip) */}
+          <div className="tech-core">
+            <ShieldCheck size={30} color="#a3e635" />
+          </div>
+
+          {/* Text Overlay */}
+          <div style={{ position: 'absolute', bottom: '-40px', width: '100%', textAlign: 'center', zIndex: 20 }}>
+            <h2 style={{ margin: 0, color: 'white', letterSpacing: '4px', fontSize: '1.5rem', fontWeight: 'bold' }}>INFINITE</h2>
+            <p style={{ margin: '5px 0 0 0', color: '#a3e635', fontSize: '0.8rem', letterSpacing: '1px' }}>Build More. Wait Less.</p>
+          </div>
         </div>
       </div>
 
